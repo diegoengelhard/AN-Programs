@@ -1,0 +1,161 @@
+Define verify_ipf()=
+Prgm
+:© ==================================================  © Verifica condiciones de IPF para g(x) en [a, b]   ==================================================
+:
+:© --- (1) DEFINA EL INTERVALO [a, b] ---
+:Define a=1
+:Define b=2
+:
+:© --- (2) DEFINA LA FUNCIÓN g(x) COMO g1(x) ---
+:Define g1(x)=√(((10)/(x+4)))
+:© --- (3) DEFINA LA DERIVADA g'(x) COMO dg1(x) ---
+:Define dg1(x)=((−√(10))/(2*(x+4)^(((3)/(2)))))
+:© --- (4) PARÁMETROS DEL MUESTREO ---
+:Local n_puntos
+:n_puntos:=100
+:
+:© =======================
+:Local i,x,gx,dgx_abs,ming,maxg,k_est,inv_ok,cont_ok,k_msg
+:Local g_error_flag,dg_error_flag,ga,gb,ga_ok,gb_ok
+:inv_ok:=false
+:cont_ok:=false
+:g_error_flag:=false
+:dg_error_flag:=false
+:k_msg:=""
+:
+:Disp "1. Verificando Invarianza g(x) ∈ [a,b]..."
+:ming:=undef
+:maxg:=undef
+:
+:Try
+:  ming:=approx(g1(a))
+:  maxg:=ming
+:Else
+:  Disp "   ERROR al calcular g1("+string(a)+"). No se puede iniciar."
+:  g_error_flag:=true
+:  Goto fin_invarianza
+:EndTry
+:
+:For i,1,n_puntos
+:  x:=approx(a+((i*(b-a))/(n_puntos)))
+:  Try
+:    gx:=approx(g1(x))
+:    ming:=min(ming,gx)
+:    maxg:=max(maxg,gx)
+:  Else
+:    Disp "   ERROR: al calcular g1("+string(x)+")"
+:    g_error_flag:=true
+:  EndTry
+:EndFor
+:
+:Lbl fin_invarianza
+:If g_error_flag=false Then
+:  If ming≥a and maxg≤b Then
+:    inv_ok:=true
+:  EndIf
+:EndIf
+:
+:Disp "2. Verificando Contracción |g'(x)| < 1..."
+:k_est:=0.
+:Local epsilon
+:
+:If b-a=0 Then
+:  epsilon:=0
+:Else
+:  epsilon:=(b-a)*10^(−6)
+:EndIf
+:
+:For i,0,n_puntos
+:  x:=approx(a+((i*(b-a))/(n_puntos)))
+:  Try
+:    dgx_abs:=approx(abs(dg1(x)))
+:    k_est:=max(k_est,dgx_abs)
+:  Else
+:    Disp "   ERROR: al calcular |dg1("+string(x)+")|"
+:    dg_error_flag:=true
+:  EndTry
+:EndFor
+:
+:If dg_error_flag=false Then
+:  If k_est<1 Then
+:    cont_ok:=true
+:  EndIf
+:EndIf
+:
+:Disp "------------------------------------"
+:Disp "      RESUMEN"
+:Disp "------------------------------------"
+:
+:Disp " "
+:
+:Disp "--- Verificación Invarianza ---"
+:ga_ok:=false
+:gb_ok:=false
+:Try
+:  ga:=approx(g1(a))
+:  ga_ok:=true
+:  Disp "  g(a) = g1("&string(a)&") ≈ "&string(ga)
+:Else
+:  Disp "  g(a) = g1("&string(a)&") -> ERROR al calcular"
+:EndTry
+:Try
+:  gb:=approx(g1(b))
+:  gb_ok:=true
+:  Disp "  g(b) = g1("&string(b)&") ≈ "&string(gb)
+:Else
+:  Disp "  g(b) = g1("&string(b)&") -> ERROR al calcular"
+:EndTry
+:
+:If g_error_flag=false and getType(ming)="NUM" and getType(maxg)="NUM" Then
+:  Disp "  Min(g1) en [a,b] ≈ "&string(ming)
+:  Disp "  Max(g1) en [a,b] ≈ "&string(maxg)
+:  Disp "  Rango g(x) ["&string(ming)&","&string(maxg)&"]"
+:  If inv_ok Then
+:    Disp "    ⊆ ["&string(a)&","&string(b)&"] -> INVARIANZA OK"
+:  Else
+:    Disp "    NO ⊆ ["&string(a)&","&string(b)&"] -> INVARIANZA FALLA"
+:  EndIf
+:Else
+:  Disp "  Rango g(x) INDETERMINADO (Error en cálculo)"
+:  If not inv_ok Then
+:    Disp "  => INVARIANZA FALLA (o indeterminada)"
+:  EndIf
+:EndIf
+:Disp " "
+:
+:Disp "--- Verificación Contracción ---"
+:If dg_error_flag=false and getType(k_est)="NUM" Then
+:  Disp "  Max|g'(x)| en [a,b] ≈ k = "&string(k_est)
+:  If cont_ok Then
+:    Disp "    k < 1 -> CONTRACCIÓN OK"
+:  Else
+:    Disp "    k ≥ 1 -> CONTRACCIÓN FALLA"
+:  EndIf
+:Else
+:  Disp "  Max|g'(x)| ≈ k INDETERMINADO (Error en cálculo)"
+:  If not cont_ok Then
+:    Disp "  => CONTRACCIÓN FALLA (o indeterminada)"
+:  EndIf
+:EndIf
+:Disp " "
+:
+:Disp "--- Conclusión ---"
+:If inv_ok and cont_ok Then
+:  Disp "g1(x) y dg1(x) VÁLIDAS para IPF."
+:Else
+:  Disp "g1(x) y/o dg1(x) NO PARECEN para IPF."
+:  If not inv_ok Then
+:    Disp "  - Razón: Falla chequeo de Invarianza."
+:  EndIf
+:  If not cont_ok Then
+:    Disp "  - Razón: Falla chequeo de Contracción (k≥1)."
+:  EndIf
+:  If g_error_flag or dg_error_flag Then
+:    Disp "  - Razón: Hubo errores al evaluar g1(x) o dg1(x)."
+:  EndIf
+:EndIf
+:Disp "------------------------------------"
+:
+:Lbl fin
+:Disp "Fin de la verificación."
+:EndPrgm

@@ -1,0 +1,118 @@
+Define steffensen()=
+Prgm
+:© ==================================================
+©            MÉTODO DE STEFFENSEN     
+© ==================================================
+:Define a=1
+:Define b=2
+:Define g1(x)=√(((10)/(x+4)))
+:Define p0_inicial=1.5
+:Define epsilon=10^(−8)
+:Define n_max=100
+:Local den_tol
+:den_tol:=epsilon*epsilon
+:© ==================================================
+:Local k,p0,p1,p2,p_hat_k,error_abs,den,num
+:Local calc_ok
+:© ==================================================
+:Disp "------------------------------------"
+:Disp "     Método de Steffensen"
+:Disp "------------------------------------"
+:Disp "g1(x) =",g1(x)
+:Disp "Intervalo Contexto: ["&string(a)&","&string(b)&"]"
+:Disp "Punto Inicial p0: "&string(p0_inicial)
+:Disp "Tolerancia ε: "&string(epsilon)
+:Disp "Max Iteraciones N: "&string(n_max)
+:Disp "------------------------------------"
+:
+:Disp "k  | p0_ciclo   | p1=g(p0)   | p2=g(p1)   | p^_k    | Error Abs"
+:Disp "----------------------------------------------------------------------"
+:k:=0
+:p0:=p0_inicial
+:p_hat_k:=undef
+:error_abs:=undef
+:
+:While k<n_max
+:  calc_ok:=true
+:  Try
+:    p1:=approx(g1(p0))
+:  Else
+:    Disp "ERROR: No se pudo calcular p1 = g1("&string(p0)&") en ciclo k="&string(k)&"."
+:    calc_ok:=false
+:  EndTry
+:
+:  If calc_ok Then
+:    Try
+:      p2:=approx(g1(p1))
+:    Else
+:      Disp "ERROR: No se pudo calcular p2 = g1("&string(p1)&") en ciclo k="&string(k)&"."
+:      calc_ok:=false
+:    EndTry
+:  EndIf
+:
+:  If calc_ok=false Then
+:    Goto conclusion
+:  EndIf
+:
+:  den:=approx(p2-2*p1+p0)
+:
+:  If abs(den)<den_tol Then
+:    Disp "----------------------------------------------------------------------"
+:    Disp "DETENIDO: Denominador Aitken ("&string(den)&") cercano a cero en k="&string(k)&"."
+:    Disp "          (Convergencia muy rápida o problema)."
+:    p_hat_k:=p2
+:    Goto dzc
+:  EndIf
+:
+:  num:=approx((p1-p0)^(2))
+:
+:  Try
+:    p_hat_k:=approx(p0-((num)/(den)))
+:  Else
+:    Disp "----------------------------------------------------------------------"
+:    Disp "ERROR al calcular p_hat_k en k="&string(k)&" (división)."
+:    calc_ok:=false
+:    Goto conclusion
+:  EndTry
+:
+:  error_abs:=approx(abs(p_hat_k-p0))
+:
+:  Disp format(k,"G3")," | ",format(p0,"F9")," | ",format(p1,"F9")," | ",format(p2,"F9")," | ",format(p_hat_k,"F9")," | ",format(error_abs,"E4")
+:
+:  If error_abs<epsilon Then
+:    Goto converged
+:  EndIf
+:
+:  p0:=p_hat_k
+:  k:=k+1
+:EndWhile
+:
+:Lbl conclusion
+:Disp "----------------------------------------------------------------------"
+:If k = n_max Then
+:  Lbl max_iter_reached
+:  Disp "Método Steffensen NO convergió en "&string(n_max)&" iteraciones."
+:  Disp "Última estimación p_hat ≈ "&string(p_hat_k)
+:  If getType(error_abs)="NUM" Then
+:    Disp "(Último error calculado ≈ "&string(error_abs)&")"
+:  endif
+:elseif calc_ok = false Then
+:  Disp "Método Steffensen DETENIDO por error en cálculo."
+:  Disp "Revise g1(x) y el intervalo."
+:else
+:  Lbl converged
+:  Lbl dzc
+:  
+:  If abs(den)<den_tol And error_abs >= epsilon Then
+:    Disp "DETENIDO por Denominador Cero en k="&string(k)&"."
+:    Disp "Última estimación p_hat ≈ "&string(p_hat_k)
+:  else
+:    Disp "Convergencia Steffensen alcanzada en "&string(k)&" iteraciones (k)." © k ya se incrementó, mostramos k
+:    Disp "Raíz acelerada p_hat ≈ "&string(p_hat_k)
+:    Disp "(Error |p_hat_k - p0_ciclo| ≈ "&string(error_abs)&" < "&string(epsilon)&")"
+:  endif
+:endif
+:
+:Disp "----------------------------------------------------------------------"
+:Disp "Fin del cálculo Steffensen."
+:EndPrgm

@@ -1,0 +1,129 @@
+Define bisec()=
+Prgm
+© =============================================
+© ===         METODO DE BISECCION         ===
+© ===     (Estilo Fiel a ipf.txt v3)      ===
+© ===     (Funcion f(x) Hardcoded)      ===
+© =============================================
+© --- Definir Parametros y FUNCION ---
+Define a = 1       © Limite inferior intervalo
+Define b = 2       © Limite superior intervalo
+Define epsilon = 1E-4  © Tolerancia |b-a|/2 < epsilon
+Define n_max = 100    © Maximo de iteraciones
+
+© --- Definir la funcion f(x) AQUI ---
+Define f(x) = x^3 + 4*x^2 - 10  © <--- EDITA ESTA LINEA PARA TU FUNCION
+© =============================================
+
+© --- Variables Locales ---
+Local n,p,fa,fp,fb,error_abs,error_rel,flag
+
+© --- Setup Inicial y Encabezado ---
+ClrIO
+Disp "------------------------------------"
+Disp "      METODO DE BISECCION"
+Disp "------------------------------------"
+© Mostrar la funcion definida internamente
+Disp "f(x) = ",f(x)  © Muestra la expresion de f(x) definida arriba
+Disp "Intervalo [A, B] = ["&string(a)&", "&string(b)&"]"
+Disp "Tolerancia EPSILON = ",epsilon
+Disp "Max Iter N_MAX = ",n_max
+Disp "------------------------------------"
+
+© --- Verificaciones Iniciales ---
+Try
+  fa:=approx(f(a))  
+  fb:=approx(f(b))  
+Catch er
+  Disp "ERROR al evaluar f(A) o f(B)."
+  Disp "Revisar definicion de f(x)."
+  Return
+EndTry
+
+If fa*fb > 0 Then
+  Disp "ERROR: f(A)*f(B) > 0."
+  Disp "Los signos deben ser opuestos."
+  Return
+EndIf
+
+If fa=0 Then
+  Disp "Raiz exacta encontrada en A:"
+  Disp "P = ",a
+  Return
+EndIf
+If fb=0 Then
+  Disp "Raiz exacta encontrada en B:"
+  Disp "P = ",be
+  Return
+EndIf
+
+Pause "Enter para iniciar iteraciones..."
+ClrIO
+Disp "n  | a          | b          | p          | f(p)       | ErrorAbs   | ErrorRel"
+Disp "-------------------------------------------------------------------------------"
+
+© --- Bucle de Iteraciones ---
+n:=0
+p:=undef
+error_abs:=undef
+error_rel:=undef
+fp:=undef
+0→flag
+
+While n < n_max
+  p:=approx((a+b)/2)
+  error_abs:=approx(abs(b-a)/2)
+
+  © Evaluar f(p) usando la funcion interna
+  Try
+    fp:=approx(f(p)) © Llama a f() definida arriba
+  Else
+    Disp "-------------------------------------------------------------------------------"
+    Disp "ERROR al evaluar f(P) en P="&string(p)
+    Return
+  EndTry
+
+  If p≠0 Then
+    error_rel:=approx(error_abs/abs(p))
+  Else
+    error_rel:=0
+  EndIf
+
+  Disp format(n+1,"G3"),"|",format(a,"F9"),"|",format(b,"F9"),"|",format(p,"F9"),"|",format(fp,"E9"),"|",format(error_abs,"E9"),"|",format(error_rel,"E9")
+
+  If fp=0 or error_abs<epsilon Then
+    1→flag
+    Goto convergencia
+  EndIf
+
+  If fa*fp>0 Then
+    a:=p
+    fa:=fp
+  Else
+    b:=p
+  EndIf
+
+  n:=n+1
+EndWhile
+
+© --- Resultados Finales ---
+Lbl convergencia
+Disp "-------------------------------------------------------------------------------"
+If flag=0 Then
+  Disp "Metodo NO convergio en "&string(n_max)&" iteraciones."
+  Disp "Ultima aproximacion P ≈ "&string(p)
+  Disp "(Ultimo Error Abs ≈ "&string(error_abs)&" >= "&string(epsilon)&")"
+Else
+  Disp "Convergencia alcanzada en "&string(n+1)&" iteraciones."
+  Disp "Raiz aproximada P ≈ "&string(p)
+  Disp "(Error Abs |b-a|/2 ≈ "&string(error_abs)&" < "&string(epsilon)&")"
+  If p≠0 Then
+    Disp "(Error Relativo ≈ "&string(error_rel)&")"
+    Disp "(Error Porcentual ≈ "&string(approx(error_rel*100))&" %)"
+  Else
+    Disp "(P=0, Error Relativo no aplica)"
+  EndIf
+EndIf
+Disp "-------------------------------------------------------------------------------"
+Disp "Fin del cálculo BISECCION."
+EndPrgm

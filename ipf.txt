@@ -1,0 +1,62 @@
+Define ipf()=
+Prgm
+:© ==================================================  ©           ITERACIÓN DE PUNTO FIJO (IPF)           © ==================================================
+:Define a=1
+:Define b=1.7
+:Define g1(x)=0.5*√(10-x^(3))
+:Define p0=1.5
+:Define epsilon=10^(−6)
+:Define n_max=100
+:© ==================================================
+:Local n,pn,pn_mas1,error_abs
+:
+:Disp "------------------------------------"
+:Disp "  Iteración de Punto Fijo (IPF)"
+:Disp "------------------------------------"
+:Disp "g1(x) =",g1(x)
+:Disp "Intervalo: ["&string(a)&","&string(b)&"]"
+:Disp "Punto Inicial p0: "&string(p0)
+:Disp "Tolerancia ε: "&string(epsilon)
+:Disp "Max Iteraciones N: "&string(n_max)
+:Disp "------------------------------------"
+:
+:Disp "n    | p_n        | p_n+1      | Error Abs"
+:n:=0
+:pn:=p0
+:pn_mas1:=undef
+:error_abs:=undef
+:
+:While n<n_max
+:  Try
+:    pn_mas1:=approx(g1(pn))
+:  Else
+:    Disp "ERROR al evaluar g1("&string(pn)&") en iteración "&string(n+1)&"."
+:    Return 
+:  EndTry
+:
+:  error_abs:=approx(abs(pn_mas1-pn))
+:
+:  Disp format(n,"G3")," | ",format(pn,"F9")," | ",format(pn_mas1,"F9")," | ",format(error_abs,"E4")
+:
+:  If error_abs<epsilon Then
+:    Goto convergencia
+:  EndIf
+:
+:  pn:=pn_mas1
+:  n:=n+1
+:EndWhile
+:
+:Disp "---------------------------------------------------"
+:If n=n_max Then
+:  Disp "Método NO convergió en "&string(n_max)&" iteraciones."
+:  Disp "Última aproximación p ≈ "&string(pn)
+:  Disp "(Último error calculado ≈ "&string(error_abs)&")"
+:Else
+:  Lbl convergencia
+:  Disp "Convergencia alcanzada en "&string(n+1)&" iteraciones."
+:  Disp "Raíz aproximada p ≈ "&string(pn_mas1)
+:  Disp "(Error |p_n+1 - p_n| ≈ "&string(error_abs)&" < "&string(epsilon)&")"
+:EndIf
+:Disp "---------------------------------------------------"
+:Disp "Fin del cálculo IPF."
+:EndPrgm
