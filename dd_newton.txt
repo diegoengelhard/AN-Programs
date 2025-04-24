@@ -1,0 +1,72 @@
+Define newton_divididas()=
+Prgm
+:© ==================================================  ©     POLINOMIO DE NEWTON (DIFERENCIAS DIVIDIDAS)     © ==================================================
+:Define lx={1,3,5,7}
+:Define ly={1.45,2.75,4.65,6.87}
+:© ==================================================
+:Local n,i,j,dd_table,lcoeffs,poly_term,current_poly
+:© ==================================================
+:n:=dim(lx)-1
+:Disp "Calculando polinomio de Newton de grado "&string(n)
+:Disp "Para los puntos:"
+:Disp "X:",lx
+:Disp "Y:",ly
+:Disp "------------------------------------"
+:Disp "Calculando Tabla de Diferencias Divididas..."
+:
+:dd_table:=newMat(n+1,n+1)
+:For i,1,n+1
+:  dd_table[i,1]:=ly[i]
+:EndFor
+:
+:For j,2,n+1
+:  For i,1,n+1-(j-1)
+:    Local denominator
+:    denominator:=lx[i+j-1]-lx[i]
+:    If approx(denominator)=0 Then
+:      Disp "Error: Puntos x no distintos (x["&string(i+j-1)&"] = x["&string(i)&"])"
+:      Disp "       División por cero en cálculo de tabla."
+:      Return 
+:    EndIf
+:    Try
+:      dd_table[i,j]:=((dd_table[i+1,j-1]-dd_table[i,j-1])/(denominator))
+:    Else
+:      Disp "Error al calcular entrada dd_table["&string(i)&","&string(j)&"]"
+:      Return 
+:    EndTry
+:  EndFor
+:EndFor
+:
+:Disp "Tabla de Diferencias Divididas (dd_table):"
+:Disp dd_table
+:Disp "------------------------------------"
+:
+:lcoeffs:=newList(n+1)
+:Disp "Coeficientes c_k = f[x0,...,xk]:"
+:For i,1,n+1
+:  lcoeffs[i]:=approx(dd_table[1,i]) © c_(i-1) = dd_table[1, i]
+:EndFor
+:Disp lcoeffs
+:Disp "------------------------------------"
+:
+:Disp "Construyendo Polinomio P(x)..."
+:current_poly:=lcoeffs[1]
+:poly_term:=1
+:For i,2,n+1
+:  poly_term:=poly_term*(x-lx[i-1])
+:  current_poly:=current_poly+lcoeffs[i]*poly_term
+:EndFor
+:
+:Disp "Polinomio de Newton P(x):"
+:Disp current_poly
+:
+:Disp "Polinomio Simplificado (expandido):"
+:Try
+:  Disp expand(current_poly)
+:Else
+:  Disp "(No se pudo expandir automáticamente)"
+:EndTry
+:
+:Disp "------------------------------------"
+:Disp "Fin del cálculo Newton DD."
+:EndPrgm
