@@ -1,0 +1,88 @@
+Define error_lagrange()=
+Prgm
+:© ==================================================
+:© ===     COTA DE ERROR INTERPOLACIÓN LAGRANGE     ===
+:© ==================================================
+:Define lx={2,2.5,4}
+:Define x_eval=3  © Punto x donde se estima el error
+:Define dnf(x)=((−6)/(x^(4)))© <--- esta es la derivada
+:© ==================================================
+:Local n,i,a,b,prod_term,prod_abs,fact_n1,m_n1,bound,calc_ok,x_max_loc
+:n:=dim(lx)-1
+:a:=min(lx)
+:b:=max(lx)
+:Disp "------------------------------------"
+:Disp " Cota Error Interpolacion Lagrange"
+:Disp "------------------------------------"
+:Disp "Puntos X:",lx
+:Disp "Punto Evaluación x:",x_eval
+:Disp "Derivada (n+1) dnf(x):",dnf(x)
+:Disp "Grado Polinomio n = "&string(n)
+:Disp "Orden Derivada n+1 = "&string(n+1)
+:Disp "Intervalo [a, b] = ["&string(a)&", "&string(b)&"]"
+:Disp "------------------------------------"
+:
+:prod_term:=1
+:For i,1,n+1
+:  prod_term:=approx(prod_term*(x_eval-lx[i]))
+:EndFor
+:prod_abs:=abs(prod_term)
+:Disp "Producto |Π(x-xi)| ≈ "&string(prod_abs)
+:
+:fact_n1:=(n+1)!
+:Disp "(n+1)! = "&string(n+1)&"! = "&string(fact_n1)
+:
+:Disp "Calculando Max|dnf(t)| en ["&string(a)&","&string(b)&"]..."
+:Define der_abs(x)=abs(dnf(x))
+:
+:calc_ok:=true
+:m_n1:=undef
+:Try
+:  x_max_loc:=nfMax(der_abs(x),x,a,b)
+:  m_n1:=approx(der_abs(x_max_loc))
+:Else
+:  Disp "  ADVERTENCIA: No se pudo usar fMax."
+:  Disp "  Intentando muestreo numérico..."
+:  calc_ok:=false
+:  Local num_pts,t,val_t
+:  num_pts:=100
+:  m_n1:=0
+:  Try
+:    For i,0,num_pts
+:      t:=approx(a+((i*(b-a))/(num_pts)))
+:      val_t:=approx(der_abs(t)) © Evaluar |dnf(t)|
+:      m_n1:=max(m_n1,val_t)
+:    EndFor
+:    calc_ok:=true
+:  Else
+:    Disp "  ERROR: No se pudo evaluar |dnf(t)| durante el muestreo."
+:    calc_ok:=false
+:  EndTry
+:EndTry
+:
+:If calc_ok=false Then
+:  Disp "ERROR: No se pudo determinar M_(n+1) ni por fMax ni por muestreo."
+:  Return 
+:EndIf
+:
+:Disp "Max|dnf(t)| = M_"&string(n+1)&" ≈ "&string(m_n1)
+:
+:If fact_n1=0 Then
+:  Disp "ERROR: Factorial (n+1)! es cero (n=-1?)"
+:  Return 
+:EndIf
+:
+:bound:=approx(((m_n1)/(fact_n1))*prod_abs)
+:
+:Disp "------------------------------------"
+:Disp "  COTA DE ERROR |En(x)|"
+:Disp "------------------------------------"
+:Disp "|E_"&string(n)&"("&string(x_eval)&")| <= (M_"&string(n+1)&"/(n+1)!) * |Π(x-xi)|"
+:Disp "|E_"&string(n)&"("&string(x_eval)&")| <= ("&string(m_n1)&"/"&string(fact_n1)&") * "&string(prod_abs)
+:Disp "Resultado final de la cota:"
+:Disp "|E_"&string(n)&"("&string(x_eval)&")| <= "&string(bound)
+:Disp "------------------------------------"
+:Disp "------------------------------------"
+:Disp "Fin del calculo del Error de Lagrange"
+:
+:EndPrgm`
