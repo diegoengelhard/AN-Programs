@@ -42,11 +42,12 @@ Prgm
 :Disp "------------------------------------"
 :
 :lcoeffs:=newList(n+1)
-:Disp "Coeficientes c_k = f[x0,...,xk]:"
-:For i,1,n+1
-:  lcoeffs[i]:=approx(dd_table[1,i]) © c_(i-1) = dd_table[1, i]
+:Disp "Coeficientes del Polinomio de Newton:"
+:For k,0,n
+:  lcoeffs[k+1]:=approx(dd_table[1,k+1]) © Guarda c_k en lcoeffs[k+1]
+:  Disp " c"&string(k)&" = f[x0..x"&string(k)&"] = ",lcoeffs[k+1]
 :EndFor
-:Disp lcoeffs
+:
 :Disp "------------------------------------"
 :
 :Disp "Construyendo Polinomio P(x)..."
