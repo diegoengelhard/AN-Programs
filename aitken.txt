@@ -1,0 +1,123 @@
+Define aitken()=
+Prgm
+:© ==================================================  ©          ACELERACIÓN DE AITKEN           © ==================================================
+:Define a=1
+:Define b=2
+:Define g1(x)=√(((10)/(x+4)))
+:Define p0=1.5
+:Define epsilon=10^(−8)
+:Define n_max=100
+:© ==================================================
+:Local k,pk,pk1,pk2,p_hat_k,p_hat_prev,error_abs,den,num
+:Local calc_ok,den_tol
+:© ==================================================
+:Disp "------------------------------------"
+:Disp "  Aceleración de Aitken"
+:Disp "------------------------------------"
+:Disp "g1(x) =",g1(x)
+:Disp "Intervalo Contexto: ["&string(a)&","&string(b)&"]"
+:Disp "Punto Inicial p0: "&string(p0)
+:Disp "Tolerancia ε: "&string(epsilon)
+:Disp "Max Iteraciones N: "&string(n_max)
+:Disp "------------------------------------"
+:
+:pk:=p0
+:calc_ok:=true
+:Try
+:  pk1:=approx(g1(pk))
+:Else
+:  Disp "ERROR: No se pudo calcular p1 = g1(p0)."
+:  calc_ok:=false
+:EndTry
+:
+:If calc_ok Then
+:  Try
+:    pk2:=approx(g1(pk1))
+:  Else
+:    Disp "ERROR: No se pudo calcular p2 = g1(p1)."
+:    calc_ok:=false
+:  EndTry
+:EndIf
+:
+:If calc_ok=false Then
+:  Return 
+:EndIf
+:
+:Disp "n  | p_n        | p_n+1      | p_n+2      | p^_n    | Error Abs"
+:Disp "----------------------------------------------------------------------"
+:
+:k:=0
+:p_hat_k:=undef
+:p_hat_prev:=undef
+:error_abs:=undef
+:den_tol:=epsilon*epsilon
+:
+:While k<n_max
+:  den:=approx(pk2-2*pk1+pk)
+:  If abs(den)<den_tol Then
+:    Disp "----------------------------------------------------------------------"
+:    Disp "DETENIDO: Denominador ("&string(den)&") cercano a cero en k="&string(k)&"."
+:    Disp "          (Convergencia puede ser no lineal o demasiado rápida)."
+:    If getType(p_hat_k)="NUM" Then
+:      Disp "          Última estimación p_hat ≈ "&string(p_hat_k)
+:    ElseIf getType(pk2)="NUM" Then
+:      Disp "          Última estimación p (sin Aitken) ≈ "&string(pk2)
+:    EndIf
+:    Return 
+:  EndIf
+:
+:  num:=approx((pk1-pk)^(2))
+:  p_hat_prev:=p_hat_k
+:  Try
+:    p_hat_k:=approx(pk-((num)/(den)))
+:  Else
+:    Disp "----------------------------------------------------------------------"
+:    Disp "ERROR al calcular p_hat_k en k="&string(k)&" (división)."
+:    Return 
+:  EndTry
+:
+:  If k>0 and getType(p_hat_prev)="NUM" Then
+:    error_abs:=approx(abs(p_hat_k-p_hat_prev))
+:  Else
+:    error_abs:=undef
+:  EndIf
+:
+:  Disp string(k)&" | "&string(pk)&" | "&string(pk1)&" | "&string(pk2)&" | "&string(p_hat_k)&" | "&string(error_abs)
+:
+:  If k>0 and error_abs<epsilon Then
+:    Goto convergencia
+:  EndIf
+:
+:  pk:=pk1
+:  pk1:=pk2
+:
+:  Try
+:    pk2:=approx(g1(pk1)) © Calcula p_{k+3} = g(p_{k+2})
+:  Else
+:    Disp "----------------------------------------------------------------------"
+:    Disp "ERROR al calcular siguiente término g1("&string(pk1)&") para k="&string(k+1)&"."
+:    Goto fin_error
+:  EndTry
+:
+:  k:=k+1
+:EndWhile
+:
+:Disp "----------------------------------------------------------------------"
+:If k=n_max Then
+:  Lbl max_iter_reached
+:  Disp "Método NO convergió (Aitken) en "&string(n_max)&" iteraciones."
+:  Disp "Última estimación p^ ≈ "&string(p_hat_k)
+:  Disp "(Último error calculado ≈ "&string(error_abs)&")"
+:Else
+:  Lbl convergencia
+:  Disp "Convergencia Aitken alcanzada en "&string(k)&" iteraciones (k)."
+:  Disp "Raíz acelerada p_hat ≈ "&string(p_hat_k)
+:  Disp "(Error |p_hat_k - p_hat_(k-1)| ≈ "&string(error_abs)&" < "&string(epsilon)&")"
+:EndIf
+:
+:Lbl fin_error
+:Disp "----------------------------------------------------------------------"
+:
+:Lbl fin
+:Disp "Fin del cálculo Aitken."
+:EndPrgm
