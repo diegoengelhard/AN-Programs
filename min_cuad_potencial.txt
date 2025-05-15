@@ -1,0 +1,164 @@
+Define mcdpot()=
+Prgm
+:© ==================================================
+:© ===  MIN. CUAD. DISCRETOS (POTENCIAL y=b*x^a)  ===
+:© ===       (Entradas Hardcoded, Ecs. Expl.)     ===
+:© ==================================================
+:© --- Entradas (Hardcoded) ---
+:Define lx:={2.5,3.0,3.5,4.0,4.5,5.0} © Ejemplo: lx (x>0)
+:Define ly:={7.2,11.5,17.5,21.8,33.1,42.6} © Ejemplo: ly (y>0)
+:© ==================================================
+:Local npts,i,k,ok,sumxp0,sumxp1,sumxp2,sumyp,sumxpyp
+:Local lxln,lyln,mat_aug,rref_mat,c0,c1,mod_a,mod_b,mod_pot
+:Local eqstr1,eqstr2
+
+:npts:=dim(lx)
+:ok:=true
+
+:© --- Salida Inicial ---
+:ClrIO
+:Disp "------------------------------------"
+:Disp "  Min. Cuad. Disc. (Pot. y=b*x^a)"
+:Disp "------------------------------------"
+:Disp "Puntos X:",lx
+:Disp "Puntos Y:",ly
+:Disp "Num. puntos npts = "&string(npts)
+:Disp "Modelo a ajustar: y = b*x^a"
+:Disp "Linealizacion: ln(y) = ln(b) + a*ln(x)"
+:Disp "             Y' = C0 + C1*X'"
+:Disp "Donde: Y'=ln(y), X'=ln(x), C0=ln(b), C1=a"
+:Disp "------------------------------------"
+
+:© --- Verificaciones ---
+:If dim(lx)≠dim(ly) Then
+:  Disp "ERROR: Listas X,Y dimensiones dif."
+:  ok:=false
+:  Goto finprog
+:EndIf
+:If npts < 2 Then
+:  Disp "ERROR: Se necesitan al menos 2 puntos."
+:  ok:=false
+:  Goto finprog
+:EndIf
+:For i,1,npts
+:  If lx[i] <= 0 Or ly[i] <= 0 Then
+:    Disp "ERROR: Valores de X e Y deben ser > 0"
+:    Disp "       para calcular ln(x) y ln(y)."
+:    If lx[i]<=0 Then : Disp "       Error en x["&string(i)&"]="&string(lx[i]) : EndIf
+:    If ly[i]<=0 Then : Disp "       Error en y["&string(i)&"]="&string(ly[i]) : EndIf
+:    ok:=false
+:    Goto finprog
+:  EndIf
+:EndFor
+
+:© --- Transformacion de X a X'=ln(X) e Y a Y'=ln(Y) ---
+:lxln:=newList(npts)
+:lyln:=newList(npts)
+:Try
+:  For i,1,npts
+:    lxln[i]:=approx(ln(lx[i]))
+:    lyln[i]:=approx(ln(ly[i]))
+:  EndFor
+:Else
+:  Disp "ERROR al calcular ln(x) o ln(y)."
+:  ok:=false
+:  Goto finprog
+:EndTry
+:Disp "Valores transformados X' = ln(X):"
+:Disp lxln
+:Disp "Valores transformados Y' = ln(Y):"
+:Disp lyln
+:Disp "------------------------------------"
+
+:© --- Calculo de Sumatorias para modelo linealizado Y'=C0+C1*X' ---
+:sumxp0:=0 : sumxp1:=0 : sumxp2:=0 : sumyp:=0 : sumxpyp:=0
+:For i,1,npts
+:  sumxp0:=sumxp0+1                © Sum((X')^0) es npts
+:  sumxp1:=sumxp1+lxln[i]          © Sum((X')^1)
+:  sumxp2:=sumxp2+lxln[i]^2        © Sum((X')^2)
+:  sumyp:=sumyp+lyln[i]            © Sum(Y')
+:  sumxpyp:=sumxpyp+lxln[i]*lyln[i]  © Sum(X'*Y')
+:EndFor
+:sumxp0:=approx(sumxp0) : sumxp1:=approx(sumxp1) : sumxp2:=approx(sumxp2)
+:sumyp:=approx(sumyp) : sumxpyp:=approx(sumxpyp)
+
+:© --- MOSTRAR ECUACIONES NORMALES (para Y'=C0+C1*X') ---
+:Disp "Ecuaciones Normales para Y'=C0+C1*X':"
+:eqstr1:="C0*Sum((X')^0) + C1*Sum((X')^1) = Sum(Y'*(X')^0)"
+:eqstr2:="C0*Sum((X')^1) + C1*Sum((X')^2) = Sum(Y'*(X')^1)"
+:Disp "Ec.1: "&eqstr1
+:Disp "  Donde:"
+:Disp "    Sum((X')^0) = "&string(sumxp0)
+:Disp "    Sum((X')^1) = "&string(sumxp1)
+:Disp "    Sum(Y'*(X')^0) = Sum(Y') = "&string(sumyp)
+:Disp "  ----"
+:Disp "Ec.2: "&eqstr2
+:Disp "  Donde:"
+:Disp "    Sum((X')^1) = "&string(sumxp1)
+:Disp "    Sum((X')^2) = "&string(sumxp2)
+:Disp "    Sum(Y'*(X')^1) = Sum(X'*Y') = "&string(sumxpyp)
+:Disp "------------------------------------"
+
+:© --- CONSTRUIR MATRIZ AUMENTADA (mat_aug) ---
+:mat_aug:=newMat(2,3)
+:mat_aug[1,1]:=sumxp0
+:mat_aug[1,2]:=sumxp1
+:mat_aug[1,3]:=sumyp
+
+:mat_aug[2,1]:=sumxp1
+:mat_aug[2,2]:=sumxp2
+:mat_aug[2,3]:=sumxpyp
+
+:Disp "Matriz Aumentada [A|b] para Y'=C0+C1*X':"
+:Disp mat_aug
+:Disp "------------------------------------"
+
+:© --- RESOLVER SISTEMA PARA C0, C1 ---
+:Disp "Resolviendo para C0 y C1..."
+:Try
+:  rref_mat := rref(mat_aug)
+:  Disp "Matriz [I|C] despues de rref:"
+:  Disp rref_mat
+:  c0:=approx(rref_mat[1,3]) © C0 = ln(b)
+:  c1:=approx(rref_mat[2,3]) © C1 = a
+:  Disp "Coeficientes linealizados:"
+:  Disp "C0 (ln(b)) approx "&string(c0)
+:  Disp "C1 (a) approx "&string(c1)
+:Else
+:  Disp "ERROR al calcular rref(mat_aug)."
+:  ok:=false
+:EndTry
+
+:If ok=false Then
+:  Goto finprog
+:EndIf
+:Disp "------------------------------------"
+
+:© --- CONVERTIR C0, C1 a PARAMETROS a, b ---
+:Disp "Calculando parametros del modelo pot.:"
+:Try
+:  mod_a:=c1
+:  mod_b:=approx(exp(c0))
+:  Disp "a = C1 approx "&string(mod_a)
+:  Disp "b = e^(C0) approx "&string(mod_b)
+:Else
+:  Disp "ERROR al calcular 'b' (exp(C0))."
+:  ok:=false
+:  Goto finprog
+:EndTry
+:Disp "------------------------------------"
+
+:© --- MODELO POTENCIAL RESULTANTE ---
+:mod_pot:=mod_b*x^(mod_a) © Crear expresion simbolica
+
+:Disp "Modelo Potencial Resultante:"
+:Disp "y approx "&string(mod_b)&" * x^("&string(mod_a)&")"
+:Disp "Forma simbolica: ",mod_pot
+:Disp "------------------------------------"
+
+:Lbl finprog
+:If ok=false Then
+:  Disp "PROGRAMA INTERRUMPIDO POR ERROR."
+:EndIf
+:Disp "Fin Min. Cuad. Disc. Potencial."
+:EndPrgm

@@ -1,0 +1,161 @@
+Define mcdcgenpoli()=
+Prgm
+:© ==================================================
+:© === MIN. CUAD. CONTINUOS (POLINOMIAL GRADO M)  ===
+:© ===    (Entradas Hardcoded, Ecs. Expl. Rev.2)  ===
+:© ==================================================
+:© --- Entradas (Hardcoded) ---
+:Define f0(t)=exp(-t) © Funcion a aproximar.
+:                      © Usar 't' como variable dummy en la definicion
+:                      © y en las integrales internas del programa.
+:Define lima:=0           © Limite inferior de integracion
+:Define limb:=1           © Limite superior de integracion
+:Define m:=2             © Grado del polinomio de ajuste P_m(x)
+:© ==================================================
+:Local i,j,k,r,c,ok_calc
+:Local k_eq,exp_val,int_val_a,int_val_b
+:Local mat_aug,rref_mat,coefs,poly_res,eqstr
+:Local t © Variable dummy local para calculos de integrales
+
+:ok_calc:=true
+
+:© --- Salida Inicial ---
+:ClrIO
+:Disp "------------------------------------"
+:Disp "Min.Cuad.Cont. (Poli Grado "&string(m)&")"
+:Disp "------------------------------------"
+:© Mostrar la funcion usando su definicion
+:Disp "Funcion f0(t) =",f0(t)  © La calculadora mostrara: funcion exp(-t)
+:Disp "Intervalo: ["&string(lima)&", "&string(limb)&"]"
+:Disp "Grado de ajuste m = "&string(m)
+:Disp "------------------------------------"
+
+:© --- Verificaciones ---
+:If limb<=lima Then
+:  Disp "ERROR: limb debe ser > lima."
+:  ok_calc:=false
+:  Goto finprog
+:EndIf
+:If m<0 Then
+:  Disp "ERROR: Grado m debe ser >= 0."
+:  ok_calc:=false
+:  Goto finprog
+:EndIf
+
+:© --- MOSTRAR ECUACIONES NORMALES LITERALMENTE ---
+:Disp "Ecuaciones Normales (Simb./Integrales):"
+:For k,0,m  © Para cada ecuacion k (k-esima ecuacion, k=0..m)
+:  eqstr:=""
+:  © Parte izquierda: Sum_j (c_j * Integral(t^(k+j) dt))
+:  For j,0,m  © Para cada termino c_j
+:    eqstr:=eqstr&"c"&string(j)&"*Int(t^"&string(k+j)&",t)"
+:    If j<m Then
+:      eqstr:=eqstr&" + "
+:    EndIf
+:  EndFor
+:  © Parte derecha: Integral(f0(t)*t^k dt)
+:  eqstr:=eqstr&" = Int(f0(t)*t^"&string(k)&",t)"  © <--- CAMBIO AQUI
+:  Disp "Ec."&string(k+1)&": "&eqstr
+:  Disp "  Donde Int es de "&string(lima)&" a "&string(limb)&":"
+:
+:  © Calcular y mostrar las integrales numericas para esta ecuacion k
+:  For j,0,m
+:    Try
+:      int_val_a:=approx(∫(t^(k+j),t,lima,limb))
+:    Else
+:      Disp "  ERROR calc. Int(t^"&string(k+j)&")"
+:      ok_calc:=false
+:      Goto finprog_err_int
+:    EndTry
+:    Disp "    Int(t^"&string(k+j)&",t) = "&string(int_val_a)
+:  EndFor
+:  Try
+:    int_val_b:=approx(∫(f0(t)*(t^k),t,lima,limb))
+:  Else
+:    Disp "  ERROR calc. Int(f0(t)*t^"&string(k)&")"  © <--- CAMBIO AQUI
+:    ok_calc:=false
+:    Goto finprog_err_int
+:  EndTry
+:  Disp "    Int(f0(t)*t^"&string(k)&",t) = "&string(int_val_b) © <--- CAMBIO AQUI
+:  If k<m Then
+:    Disp "  ----"
+:  EndIf
+:EndFor
+:Lbl finprog_err_int
+:If ok_calc=false Then : Goto finprog : EndIf
+:Disp "------------------------------------"
+
+:© --- CONSTRUIR MATRIZ AUMENTADA (mat_aug) PARA rref ---
+:mat_aug:=newMat(m+1,m+2)
+:
+:k_eq:=0
+:For r,1,m+1
+:  For c,1,m+1
+:    exp_val := k_eq + (c-1)
+:    Try
+:      mat_aug[r,c]:=approx(∫(t^exp_val,t,lima,limb))
+:    Else
+:      Disp "ERR Int(t^"&string(exp_val)&") p/ mat_aug"
+:      ok_calc:=false
+:      Goto finprog_err_mat
+:    EndTry
+:  EndFor
+:  Try
+:    mat_aug[r,m+2]:=approx(∫(f0(t)*(t^k_eq),t,lima,limb))
+:  Else
+:    Disp "ERR Int(f0(t)*t^"&string(k_eq)&") p/ mat_aug" © <--- CAMBIO AQUI
+:    ok_calc:=false
+:    Goto finprog_err_mat
+:  EndTry
+:  k_eq:=k_eq+1
+:EndFor
+:Lbl finprog_err_mat
+:If ok_calc=false Then : Goto finprog : EndIf
+
+:Disp "Matriz Aumentada [A|b] para rref:"
+:Disp mat_aug
+:Disp "------------------------------------"
+
+:© --- RESOLVER SISTEMA Y MOSTRAR COEFICIENTES ---
+:Disp "Resolviendo sistema Ac = b..."
+:coefs:=newList(m+1)
+:Try
+:  rref_mat := rref(mat_aug)
+:  Disp "Matriz [I|c] despues de rref:"
+:  Disp rref_mat
+:  Disp "Coeficientes:"
+:  For i,1,m+1
+:    coefs[i]:=approx(rref_mat[i,m+2])
+:    Disp "c"&string(i-1)&" approx "&string(coefs[i])
+:  EndFor
+:Else
+:  Disp "ERROR al calcular rref(mat_aug)."
+:  Disp "Verifique la matriz (puede ser singular)."
+:  ok_calc:=false
+:EndTry
+
+:If ok_calc=false Then : Goto finprog : EndIf
+:Disp "------------------------------------"
+
+:© --- ARMAR POLINOMIO RESULTANTE ---
+:poly_res:=0
+:For i,1,m+1
+:  poly_res:=poly_res + coefs[i]*x^((i-1))
+:EndFor
+:Disp "Polinomio Aproximante P(x):"
+:Disp poly_res
+:
+:Disp "P(x) expandido:"
+:Try
+:  Disp expand(poly_res)
+:Else
+:  Disp "(No se pudo expandir automaticamente)"
+:EndTry
+:Disp "------------------------------------"
+
+:Lbl finprog
+:If ok_calc=false Then
+:  Disp "PROGRAMA INTERRUMPIDO POR ERROR."
+:EndIf
+:Disp "Fin Min. Cuad. Cont. Polinomial."
+:EndPrgm

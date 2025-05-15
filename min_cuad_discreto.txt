@@ -1,0 +1,138 @@
+Define min_cuad_disc()=
+Prgm
+:Define lx={1,3,4,5,7}
+:Define ly={−3.1,−1.1,−0.5,0.2,1.1}
+:Define m=2
+:© --------
+:Local npts,i,j,k,r,c,idx,ok
+:Local k_eq,exp_val,sum_val,sum_val_b
+:Local mat_aug,rref_mat,coefs,poly_res,eqstr
+:npts:=dim(lx)
+:ok:=true
+:© --------
+:Disp "------------------------------------"
+:Disp "  Min. Cuad. Disc. (Poli Grado "&string(m)&")"
+:Disp "------------------------------------"
+:Disp "Puntos X:",lx
+:Disp "Puntos Y:",ly
+:Disp "Grado de ajuste m = "&string(m)
+:Disp "Num. puntos npts = "&string(npts)
+:Disp "------------------------------------"
+:Disp "Ecuaciones Normales (Simb./Sumatorias):"
+:For k,0,m
+:  eqstr:=""
+:  For j,0,m
+:    eqstr:=eqstr&"c"&string(j)&"*Sum(x^"&string(k+j)&")"
+:    If j<m Then
+:      eqstr:=eqstr&" + "
+:    EndIf
+:  EndFor
+:  eqstr:=eqstr&" = Sum(y*x^"&string(k)&")"
+:  Disp "Ec."&string(k+1)&": "&eqstr
+:  Disp "  Donde:"
+:  For j,0,m
+:    sum_val:=0
+:    For idx,1,npts
+:      Try
+:        sum_val:=sum_val+lx[idx]^(k+j)
+:      Else
+:        Disp "  ERROR calculando Sum(x^"&string(k+j)&")"
+:        ok:=false
+:        Goto finprog
+:      EndTry
+:    EndFor
+:    Disp "    Sum(x^"&string(k+j)&") = "&string(approx(sum_val))
+:  EndFor
+:  sum_val_b:=0
+:  For idx,1,npts
+:    Try
+:      sum_val_b:=sum_val_b+ly[idx]*lx[idx]^(k)
+:    Else
+:      Disp "  ERROR calculando Sum(y*x^"&string(k)&")"
+:      ok:=false
+:      Goto finprog
+:    EndTry
+:  EndFor
+:  Disp "    Sum(y*x^"&string(k)&") = "&string(approx(sum_val_b))
+:  If k<m Then
+:    Disp "  ----"
+:  EndIf
+:EndFor
+:Disp "------------------------------------"
+:
+:mat_aug:=newMat(m+1,m+2)
+:k_eq:=0
+:For r,1,m+1
+:  For c,1,m+1
+:    exp_val:=k_eq+c-1
+:    sum_val:=0
+:    For idx,1,npts
+:      Try
+:        sum_val:=sum_val+lx[idx]^(exp_val)
+:      Else
+:        Disp "error"
+:        ok:=false
+:        Goto finprog
+:      EndTry
+:    EndFor
+:    mat_aug[r,c]:=approx(sum_val)
+:  EndFor
+:  sum_val_b:=0
+:  For idx,1,npts
+:    Try
+:      sum_val_b:=sum_val_b+ly[idx]*lx[idx]^(k_eq)
+:    Else
+:      Disp "ERROR Sum(y*x^"&string(k_eq)&") para mat_aug"
+:      ok:=false
+:      Goto finprog
+:    EndTry
+:  EndFor
+:  mat_aug[r,m+2]:=approx(sum_val_b)
+:  k_eq:=k_eq+1
+:EndFor
+:
+:Disp "Matriz Aumentada [A|b] para rref:"
+:Disp mat_aug
+:Disp "------------------------------------"
+:Disp "Resolviendo sistema Ac = b..."
+:coefs:=newList(m+1)
+:Try
+:  rref_mat:=rref(mat_aug)
+:  Disp "Matriz [I|c] despues de rref:"
+:  Disp rref_mat
+:  Disp "Coeficientes:"
+:  For i,1,m+1
+:    coefs[i]:=approx(rref_mat[i,m+2])
+:    Disp "c"&string(i-1)&" approx "&string(coefs[i])
+:  EndFor
+:Else
+:  Disp "ERROR al calcular rref(mat_aug)."
+:  Disp "Verifique la matriz (puede ser singular)."
+:  ok:=false
+:EndTry
+:
+:If ok=false Then
+:  Goto finprog
+:EndIf
+:Disp "------------------------------------"
+:
+:poly_res:=0
+:For i,1,m+1
+:  poly_res:=poly_res+coefs[i]*x^(i-1)
+:EndFor
+:
+:Disp "Polinomio Resultante P(x):"
+:Disp poly_res
+:Disp "P(x) expandido:"
+:Try
+:  Disp expand(poly_res)
+:Else
+:  Disp "(No se pudo expandir automaticamente)"
+:EndTry
+:Disp "------------------------------------"
+:Lbl finprog
+:If ok=false Then
+:  Disp "PROGRAMA INTERRUMPIDO POR ERROR."
+:EndIf
+:Disp "Fin Min. Cuad. Polinomial Gen."
+:EndPrgm

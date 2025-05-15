@@ -1,0 +1,123 @@
+© --- AÑADIR ESTE BLOQUE ANTES DE EndPrgm ---
+
+  © --- Interpretar Registro Ejemplo (si se definió) ---
+  If reg_ejemplo ≠ "" Then
+    If dim(reg_ejemplo) ≠ tbits Then
+      Disp "Error: Longitud del registro ejemplo ("&string(dim(reg_ejemplo))&")"
+      Disp "no coincide con tbits ("&string(tbits)&")"
+    Else
+      Disp "--- Interpretacion Registro Ejemplo ---"
+      Disp "Registro: ", reg_ejemplo
+      error_flag := false  © Reiniciar flag de error
+
+      signo_bit := sub(reg_ejemplo, 1, sbits)
+      exp_str := sub(reg_ejemplo, 1+sbits, ebits)
+      mant_str := sub(reg_ejemplo, 1+sbits+ebits, mbits)
+
+      If signo_bit = "0" Then
+        signo_val := 1
+      ElseIf signo_bit = "1" Then
+        signo_val := -1
+      Else
+        Disp "Error: Bit de signo inválido"
+        error_flag := true
+      EndIf
+
+      © --- Convertir exp_str a e_field (Inline) ---
+      If error_flag = false Then
+        e_field := 0
+        len_str := dim(exp_str)
+        For i,1,len_str
+           Local char_val_e  © Variable temporal local al bucle
+           Try
+             char_val_e := approx(expr(sub(exp_str,i,1)))
+             If char_val_e = 1 Then
+                e_field := e_field + 2^(len_str-i)
+             ElseIf char_val_e ≠ 0 Then
+                Disp "Error: Caracter no binario en exp_str: ", sub(exp_str,i,1)
+                error_flag := true
+                Exit  © Salir del bucle For
+             EndIf
+           Else
+             Disp "Error: No se pudo evaluar caracter en exp_str: ", sub(exp_str,i,1)
+             error_flag := true
+             Exit © Salir del bucle For
+           EndTry
+        EndFor
+      EndIf
+      © --- Fin Conversion exp_str ---
+
+      © --- Convertir mant_str a mant_int (Inline) ---
+      If error_flag=false Then  © Solo si no hubo error antes
+        mant_int := 0
+        len_str := dim(mant_str)
+        For i,1,len_str
+           Local char_val_m © Variable temporal local al bucle
+           Try
+             char_val_m := approx(expr(sub(mant_str,i,1)))
+             If char_val_m = 1 Then
+                mant_int := mant_int + 2^(len_str-i)
+             ElseIf char_val_m ≠ 0 Then
+                Disp "Error: Caracter no binario en mant_str: ", sub(mant_str,i,1)
+                error_flag := true
+                Exit © Salir del bucle For
+             EndIf
+           Else
+             Disp "Error: No se pudo evaluar caracter en mant_str: ", sub(mant_str,i,1)
+             error_flag := true
+             Exit © Salir del bucle For
+           EndTry
+        EndFor
+      EndIf
+      © --- Fin Conversion mant_str ---
+
+      If error_flag Then
+         Disp "Conversion fallida, no se puede continuar."
+      Else
+         exp_real := approx(e_field - sesgo)
+         denominator := 2^mbits
+         If denominator=0 Then
+           mant_val := undef © Evitar division por cero si mbits=0
+           Disp "Advertencia: mbits=0, valor mantisa indefinido."
+         Else
+           mant_val := approx(mant_int / denominator)
+         EndIf
+
+         If getType(mant_val)="NUM" Then
+            num_reg := approx(signo_val * (base^exp_real) * mant_val)
+            Disp "Signo: ", signo_val, " (Bit: ", signo_bit, ")"
+            Disp "Campo Exp (Bin): ", exp_str, " (Dec:", e_field, ")"
+            Disp "Exp Real (e-sesgo): ", exp_real
+            Disp "Campo Mant (Bin): ", mant_str, " (Dec:", mant_int, ")"
+            Disp "Mantisa Valor (Frac) ≈ ", mant_val
+            Disp "Numero Real Rep. ≈ ", num_reg
+
+            © Calcular Gap (ULP)
+            If denominator=0 Then
+               gap := undef
+            Else
+               gap := approx((base^exp_real) / denominator)
+            EndIf
+
+            If getType(gap)="NUM" Then
+               Disp "Gap (ULP) ≈ ", gap
+               siguiente := approx(num_reg + gap)
+               anterior := approx(num_reg - gap)
+               Disp "Siguiente Num. (aprox) ≈ ", siguiente
+               Disp "Anterior Num. (aprox) ≈ ", anterior
+            Else
+               Disp "Gap (ULP): No aplicable (mbits=0?)"
+            EndIf
+         Else
+            Disp "Error: No se pudo calcular valor mantisa."
+         EndIf
+      EndIf
+      Disp "------------------------------------"
+    -------
+    EndIf
+  EndIf
+
+  Disp "Fin del programa."
+  © --- FIN DEL BLOQUE A AÑADIR ---
+
+EndPrgm © Esta línea ya la tienes, el bloque va antes
