@@ -1,0 +1,84 @@
+Define mcdiscpol(x_list,y_list,grado)=
+Prgm
+:© ==========================
+:© Parámetros:
+:© x_list = lista de valores x
+:© y_list = lista de valores y 
+:© grado = grado del polinomio a calcular
+:© ==========================
+:Local n,i,j,k,phi,ip,matriz,vector,coef,polinomio,x_term
+:n:=dim(x_list)
+:If n≠dim(y_list) Then
+:  Disp "Listas x e y deben tener misma longitud"
+:  Stop
+:EndIf
+:
+:newMat(grado+1,n)→phi
+:For i,1,grado+1
+:  For j,1,n
+:    If i=1 Then
+:      1→phi[i,j]
+:    Else
+:    x_list[j]^(i-1)→phi[i,j]
+:    EndIf
+:   EndFor
+:EndFor
+:
+:Disp "Productos internos:"
+:For i,1,grado+1
+:  For j,1,grado+1
+:    sum(seq(phi[i,k]*phi[j,k],k,1,n))→ip
+:    Disp "(q",string(j-1),", q",string(i-1),") = ",approx(ip)
+:  EndFor
+:EndFor
+:
+:Disp ""
+:Disp "Productos con y:"
+:For i,1,grado+1
+:  sum(seq(y_list[k]*phi[i,k],k,1,n))→ip
+:  Disp "(y, q",string(i-1),") = ",approx(ip)
+:EndFor
+:
+:newMat(grado+1,grado+1)→matriz
+:newMat(grado+1,1)→vector
+:For i,1,grado+1
+:  For j,1,grado+1
+:    sum(seq(phi[i,k]*phi[j,k],k,1,n))→matriz[i,j]
+:  EndFor
+:  sum(seq(y_list[k]*phi[i,k],k,1,n))→vector[i,1]
+:EndFor
+:
+:Disp ""
+:Disp "Ecuaciones normales:"
+:For i,1,grado+1
+:""→ecuacion
+:  For j,1,grado+1
+:    If j>1 Then
+:      ecuacion&" + "→ecuacion
+:    EndIf
+:    ecuacion&"c"&string(j-1)&"*("&string(approx(matriz[i,j]))&")"→ecuacion
+:  EndFor
+:  ecuacion&" = "&string(approx(vector[i,1]))→ecuacion
+:  Disp ecuacion
+:EndFor
+:
+:rref(augment(matriz,vector))→resultado
+:newMat(grado+1,1)→coef
+:For i,1,grado+1
+:  resultado[i,grado+2]→coef[i,1]
+:EndFor
+:
+:Disp ""
+:Disp "Coeficientes:"
+:For i,1,grado+1
+:  Disp "c",string(i-1)," = ",approx(coef[i,1])
+:EndFor
+:
+:0→polinomio
+:For i,1,grado+1
+:  coef[i,1]*x^(i-1)+polinomio→polinomio
+: EndFor
+:Disp ""
+:Disp "Polinomio de ajuste:"
+:Disp approx(expand(polinomio))
+:EndPrgm

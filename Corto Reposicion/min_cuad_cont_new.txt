@@ -1,0 +1,97 @@
+Define mcdcpytrans()=
+Prgm
+:© Traduccion del script MicroPython para Min. Cuad. Continuo
+:© Formula y muestra las ecuaciones normales.
+:© Logica de Trapecio Inlinada.
+
+:© --- Entradas (Hardcoded) ---
+:Define lima:=0
+:Define limb:=2
+:Define n_trap:=100 © Numero de subintervalos para trapecio
+
+:© Funcion a aproximar f0(x)
+:Define f0(x)=x^3  © Para el ejemplo del usuario: Define f0(x)=x^3+3*x+2
+
+:© Funciones base phi (ejemplo hasta grado 1, como en el script)
+:Define phi0(x)=1
+:Define phi1(x)=x
+:© Define phi2(x)=x^2  © Descomentar y ajustar num_bases si se usa
+
+:© Determinar numero de funciones base a usar
+:Local num_bases := 2 © Ajustar si se añaden mas funciones phi
+
+:© --- Variables Locales ---
+:Local i,j,aij,bi,eq_str,lista_eqs
+:Local h_inline,s_inline,idx_inline,var_inline © Para trapecio inlinado
+
+:© f_int(x) sera redefinida multiples veces.
+Define f_int(x)=0 © Placeholder inicial, se redefinira dinamicamente
+
+:© --- Construccion del sistema de ecuaciones ---
+:lista_eqs:=newList(num_bases)
+:Disp "Calculando productos internos para las ecuaciones normales:"
+
+:For i,0,num_bases-1 © Indice de la funcion base q_i (para el lado derecho y una de las funciones del lado izquierdo)
+:  eq_str:=""
+:  For j,0,num_bases-1 © Indice de la funcion base q_j (para la otra funcion del lado izquierdo y el coeficiente c_j)
+:    © Calcular aij = prod_int(phi_j, phi_i)
+:    © Redefinir f_int(x) como phi_j(x) * phi_i(x)
+:    If j=0 and i=0 Then : Define f_int(x) = phi0(x)*phi0(x) : EndIf
+:    If j=1 and i=0 Then : Define f_int(x) = phi1(x)*phi0(x) : EndIf
+:    If j=0 and i=1 Then : Define f_int(x) = phi0(x)*phi1(x) : EndIf
+:    If j=1 and i=1 Then : Define f_int(x) = phi1(x)*phi1(x) : EndIf
+:    © Anadir mas combinaciones si num_bases > 2 (ej. para phi2)
+:    © If j=2 and i=0 Then : Define f_int(x) = phi2(x)*phi0(x) : EndIf
+:    © etc.
+
+:    © --- Inicio Logica Trapecio Inlinada para aij ---
+:    h_inline:=(limb-lima)/n_trap
+:    s_inline:=(f_int(x)|x=lima) + (f_int(x)|x=limb)
+:    For idx_inline,1,n_trap-1
+:      var_inline:=lima+idx_inline*h_inline
+:      s_inline:=s_inline+2*(f_int(x)|x=var_inline)
+:    EndFor
+:    aij:=(h_inline/2)*s_inline
+:    © --- Fin Logica Trapecio Inlinada para aij ---
+
+:    Disp "(q"&string(j)&", q"&string(i)&") = "&string(aij) © Mostrar producto interno
+    
+:    eq_str:=eq_str&"(c"&string(j)&")("&string(round(aij,5))&")"
+:    If j ≠ num_bases-1 Then
+:      eq_str:=eq_str&" + "
+:    EndIf
+:  EndFor
+
+:  © Calcular bi = prod_int(f0, phi_i)
+:  © Redefinir f_int(x) como f0(x) * phi_i(x)
+:  If i=0 Then : Define f_int(x) = f0(x)*phi0(x) : EndIf
+:  If i=1 Then : Define f_int(x) = f0(x)*phi1(x) : EndIf
+:  © Anadir mas casos si num_bases > 2
+:  © If i=2 Then : Define f_int(x) = f0(x)*phi2(x) : EndIf
+
+:  © --- Inicio Logica Trapecio Inlinada para bi ---
+:  h_inline:=(limb-lima)/n_trap
+:  s_inline:=(f_int(x)|x=lima) + (f_int(x)|x=limb)
+:  For idx_inline,1,n_trap-1
+:    var_inline:=lima+idx_inline*h_inline
+:    s_inline:=s_inline+2*(f_int(x)|x=var_inline)
+:  EndFor
+:  bi:=(h_inline/2)*s_inline
+:  © --- Fin Logica Trapecio Inlinada para bi ---
+
+:  Disp "(y, q"&string(i)&") = "&string(bi) © Mostrar producto interno
+:  Disp "----" © Separador como en el script Python
+
+:  eq_str:=eq_str&" = "&string(round(bi,5))
+:  lista_eqs[i+1]:=eq_str
+:EndFor
+
+:© --- Imprimir ecuaciones normales ---
+:Disp "" © Linea en blanco
+:Disp "Ecuaciones normales:"
+:For i,1,num_bases
+:  Disp lista_eqs[i]
+:EndFor
+
+:EndPrgm
+```

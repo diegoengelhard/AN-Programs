@@ -1,0 +1,92 @@
+Define mcdiscexp(x_list,y_list)=
+Prgm
+:© ==========================
+:© Parámetros:
+:© x_list = lista de valores x
+:© y_list = lista de valores y 
+:© ==========================
+:© Ajuste exponencial y = b * e^(a*x)
+:© ==========================
+:Local n,i,j,k,ylog,phi,matriz,vector,coef,resultado,a,b,polinomio,ip,ecuacion
+:n:=dim(x_list)
+:If n≠dim(y_list) Then
+:  Disp "Listas x e y deben tener misma longitud"
+:  Stop
+:EndIf
+:
+:For i,1,n
+:  If y_list[i]≤0 Then
+:   Disp "Todos los valores de y deben ser > 0"
+:   Stop
+:  EndIf
+:EndFor
+:
+:{}→ylog
+:For i,1,n
+:  augment(ylog,{ln(y_list[i])})→ylog
+:EndFor
+:
+:newMat(2,n)→phi
+:For j,1,n
+:  1→phi[1,j]
+:  x_list[j]→phi[2,j]
+:EndFor
+:
+:Disp "Productos internos:"
+:For i,1,2
+:  For j,1,2
+:   sum(seq(phi[i,k]*phi[j,k],k,1,n))→ip
+:   Disp "(q",string(j-1),", q",string(i-1),") = ",approx(ip)
+:  EndFor
+:EndFor
+:
+:Disp ""
+:Disp "Productos con ln(y):"
+:For i,1,2
+:  sum(seq(ylog[k]*phi[i,k],k,1,n))→ip
+:  Disp "(ln(y), q",string(i-1),") = ",approx(ip)
+:EndFor
+:
+:newMat(2,2)→matriz
+:newMat(2,1)→vector
+:For i,1,2
+:  For j,1,2
+:    sum(seq(phi[i,k]*phi[j,k],k,1,n))→matriz[i,j]
+:  EndFor
+:  sum(seq(ylog[k]*phi[i,k],k,1,n))→vector[i,1]
+:EndFor
+:
+:Disp ""
+:Disp "Ecuaciones normales:"
+:For i,1,2
+:""→ecuacion
+:  For j,1,2
+:   If j>1 Then
+:      ecuacion&" + "→ecuacion
+:   EndIf
+:   ecuacion&"c"&string(j-1)&"*("&string(approx(matriz[i,j]))&")"→ecuacion
+:  EndFor
+:  ecuacion&" = "&string(approx(vector[i,1]))→ecuacion
+:  Disp ecuacion
+:EndFor
+:
+:rref(augment(matriz,vector))→resultado
+:newMat(2,1)→coef
+:For i,1,2
+:  resultado[i,3]→coef[i,1]
+:EndFor
+:
+:^(coef[1,1])→b
+:coef[2,1]→a
+:
+:Disp ""
+:Disp "Coeficientes del ajuste exponencial:"
+:Disp "b = ",approx(b)
+:Disp "a=",approx(a)
+:
+:b*e^(a*x)→polinomio
+:
+:Disp ""
+:Disp "Modelo ajustado:"
+:Disp approx(expand(polinomio))
+:EndPrgm
